@@ -12,7 +12,7 @@ NYSE_LISTED_URL = "https://datahub.io/core/nyse-other-listings/r/nyse-listed.csv
 
 class StockTickerFetcher:
 
-    def __init__(self, snapshot_file='stock_tickers_last.csv', log_file='stock_tickers_log.csv'):
+    def __init__(self, snapshot_file='stock_tickers_latest.csv', log_file='stock_tickers_log.csv'):
         self.snapshot_file = snapshot_file
         self.log_file = log_file
 
@@ -36,6 +36,22 @@ class StockTickerFetcher:
         nyse_df['Exchange'] = 'NYSE'
 
         combined_df = pd.concat([nasdaq_df, other_df, nyse_df], ignore_index=True).drop_duplicates(subset='Symbol', keep='first')
+        
+        # Filter out rows containing metadata like "File Creation Time" and empty symbols
+        combined_df = combined_df[~combined_df['Symbol'].str.contains('File Creation Time', na=False)]
+        combined_df = combined_df[combined_df['Symbol'].notna() & (combined_df['Symbol'].str.strip() != '')]
+        
+        # Simplify exchange codes to main 3 exchanges
+        exchange_mapping = {
+            'N': 'NYSE',
+            'A': 'AMEX', 
+            'P': 'NASDAQ',  # NYSE Arca -> NASDAQ
+            'Z': 'NASDAQ',  # NASDAQ Global Market -> NASDAQ
+            'M': 'NYSE',    # NYSE test symbols -> NYSE
+            'V': 'NASDAQ'   # IEX test symbols -> NASDAQ
+        }
+        combined_df['Exchange'] = combined_df['Exchange'].replace(exchange_mapping)
+        
         combined_df['Fetched Date'] = datetime.datetime.now().strftime('%Y-%m-%d')
         return combined_df
 
@@ -97,12 +113,16 @@ class StockTickerFetcher:
         diff_csv_file = f'stock_tickers_diff_{today_str}.csv'
         diff_xlsx_file = f'stock_tickers_diff_{today_str}.xlsx'
 
-        new_df.to_csv(master_file, index=False)
-        diff_df.to_csv(diff_csv_file, index=False)
-        new_df.to_csv(self.snapshot_file, index=False)
+        # Sort by Symbol before saving
+        new_df_sorted = new_df.sort_values('Symbol')
+        diff_df_sorted = diff_df.sort_values('Symbol') if not diff_df.empty else diff_df
+
+        new_df_sorted.to_csv(master_file, index=False)
+        diff_df_sorted.to_csv(diff_csv_file, index=False)
+        new_df_sorted.to_csv(self.snapshot_file, index=False)
 
         if not diff_df.empty:
-            diff_df.to_excel(diff_xlsx_file, index=False)
+            diff_df_sorted.to_excel(diff_xlsx_file, index=False)
             wb = load_workbook(diff_xlsx_file)
             ws = wb.active
             fills = {
@@ -129,7 +149,7 @@ class StockTickerFetcher:
 
         log_entry = pd.DataFrame([{
             'Date': today_str,
-            'Total Symbols': len(new_df),
+            'Total Symbols': len(new_df_sorted),
             **counts
         }])
         if os.path.exists(self.log_file):
@@ -138,7 +158,7 @@ class StockTickerFetcher:
             log_entry.to_csv(self.log_file, index=False)
 
         # JSONL export
-        new_df.to_json("stock_tickers_latest.jsonl", orient="records", lines=True)
+        new_df_sorted.to_json("stock_tickers_latest.jsonl", orient="records", lines=True)
 
         print(f"Master list: {master_file}")
         print(f"Diff CSV: {diff_csv_file}")
