@@ -12,7 +12,7 @@ NYSE_LISTED_URL = "https://datahub.io/core/nyse-other-listings/r/nyse-listed.csv
 
 class MasterTickerFetcher:
 
-    def __init__(self, snapshot_file='master_tickers_last.csv', log_file='master_tickers_log.csv'):
+    def __init__(self, snapshot_file='stock_tickers_last.csv', log_file='stock_tickers_log.csv'):
         self.snapshot_file = snapshot_file
         self.log_file = log_file
 
@@ -93,9 +93,9 @@ class MasterTickerFetcher:
 
     def save_master_and_diff(self, new_df, diff_df, counts):
         today_str = datetime.datetime.now().strftime('%Y-%m-%d')
-        master_file = f'master_tickers_{today_str}.csv'
-        diff_csv_file = f'master_tickers_diff_{today_str}.csv'
-        diff_xlsx_file = f'master_tickers_diff_{today_str}.xlsx'
+        master_file = f'stock_tickers_{today_str}.csv'
+        diff_csv_file = f'stock_tickers_diff_{today_str}.csv'
+        diff_xlsx_file = f'stock_tickers_diff_{today_str}.xlsx'
 
         new_df.to_csv(master_file, index=False)
         diff_df.to_csv(diff_csv_file, index=False)
@@ -137,6 +137,9 @@ class MasterTickerFetcher:
         else:
             log_entry.to_csv(self.log_file, index=False)
 
+        # JSONL export
+        new_df.to_json("stock_tickers_latest.jsonl", orient="records", lines=True)
+
         print(f"Master list: {master_file}")
         print(f"Diff CSV: {diff_csv_file}")
         print(f"Diff XLSX: {diff_xlsx_file}")
@@ -147,3 +150,7 @@ class MasterTickerFetcher:
         master_df = self.fetch_master_lists()
         updated_master, diff_df, counts = self.detect_changes(master_df)
         self.save_master_and_diff(updated_master, diff_df, counts)
+
+if __name__ == "__main__":
+    fetcher = MasterTickerFetcher()
+    fetcher.run()
