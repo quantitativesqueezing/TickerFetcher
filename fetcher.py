@@ -10,7 +10,7 @@ NASDAQ_LISTED_URL = "https://www.nasdaqtrader.com/dynamic/symdir/nasdaqlisted.tx
 OTHER_LISTED_URL = "https://www.nasdaqtrader.com/dynamic/symdir/otherlisted.txt"
 NYSE_LISTED_URL = "https://datahub.io/core/nyse-other-listings/r/nyse-listed.csv"
 
-class MasterTickerFetcher:
+class StockTickerFetcher:
 
     def __init__(self, snapshot_file='stock_tickers_last.csv', log_file='stock_tickers_log.csv'):
         self.snapshot_file = snapshot_file
@@ -152,5 +152,5 @@ class MasterTickerFetcher:
         self.save_master_and_diff(updated_master, diff_df, counts)
 
 if __name__ == "__main__":
-    fetcher = MasterTickerFetcher()
+    fetcher = StockTickerFetcher()
     fetcher.run()

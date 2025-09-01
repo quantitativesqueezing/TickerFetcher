@@ -10,16 +10,16 @@ A Python-based tool for fetching all stock tickers listed on major exchanges (NY
 ## Installation
 
 ```bash
-git clone https://github.com/yourusername/master_tickers.git
-cd master_tickers
+git clone https://github.com/yourusername/StockTickerss.git
+cd StockTickerss
 pip install -e .
 
 
 ## Usage
 
-from master_tickers.fetcher import MasterTickerFetcher
+from StockTickerss.fetcher import StockTickerFetcher
 
-fetcher = MasterTickerFetcher()
+fetcher = StockTickerFetcher()
 fetcher.run()
 
 ## Or run nightly using CLI:
