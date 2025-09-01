@@ -1,5 +1,5 @@
-from master_tickers.fetcher import MasterTickerFetcher
+from StockTickerss.fetcher import StockTickerFetcher
 
 if __name__ == "__main__":
-    fetcher = MasterTickerFetcher()
+    fetcher = StockTickerFetcher()
     fetcher.run()

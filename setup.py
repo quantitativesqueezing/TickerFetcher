@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(
-    name="master_tickers",
+    name="TickerFetcher",
     version="1.0.0",
     packages=find_packages(),
     install_requires=[
@@ -11,7 +11,7 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            'master-tickers=scripts.run_nightly:main',
+            'TickerFetcher=scripts.run_nightly:main',
         ]
     },
     python_requires='>=3.9',
