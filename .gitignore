@@ -208,3 +208,9 @@ __marimo__/
 
 # Apple
 .DS_Store
+
+# Generated files
+*.csv
+*.json
+*.jsonl
+*.xlsx
