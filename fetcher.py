@@ -12,9 +12,13 @@ NYSE_LISTED_URL = "https://datahub.io/core/nyse-other-listings/r/nyse-listed.csv
 
 class StockTickerFetcher:
 
-    def __init__(self, snapshot_file='stock_tickers_latest.csv', log_file='stock_tickers_log.csv'):
-        self.snapshot_file = snapshot_file
-        self.log_file = log_file
+    def __init__(self, snapshot_file='stock_tickers_latest.csv', log_file='stock_tickers_log.csv', export_dir='../apps/api/data'):
+        self.export_dir = export_dir
+        # Create export directory if it doesn't exist
+        os.makedirs(self.export_dir, exist_ok=True)
+        
+        self.snapshot_file = os.path.join(self.export_dir, snapshot_file)
+        self.log_file = os.path.join(self.export_dir, log_file)
 
     def download_csv(self, url, delimiter=None):
         resp = requests.get(url)
@@ -109,9 +113,9 @@ class StockTickerFetcher:
 
     def save_master_and_diff(self, new_df, diff_df, counts):
         today_str = datetime.datetime.now().strftime('%Y-%m-%d')
-        master_file = f'stock_tickers_{today_str}.csv'
-        diff_csv_file = f'stock_tickers_diff_{today_str}.csv'
-        diff_xlsx_file = f'stock_tickers_diff_{today_str}.xlsx'
+        master_file = os.path.join(self.export_dir, f'stock_tickers_{today_str}.csv')
+        diff_csv_file = os.path.join(self.export_dir, f'stock_tickers_diff_{today_str}.csv')
+        diff_xlsx_file = os.path.join(self.export_dir, f'stock_tickers_diff_{today_str}.xlsx')
 
         # Sort by Symbol before saving
         new_df_sorted = new_df.sort_values('Symbol')
@@ -158,13 +162,16 @@ class StockTickerFetcher:
             log_entry.to_csv(self.log_file, index=False)
 
         # JSONL export
-        new_df_sorted.to_json("stock_tickers_latest.jsonl", orient="records", lines=True)
+        jsonl_file = os.path.join(self.export_dir, "stock_tickers_latest.jsonl")
+        new_df_sorted.to_json(jsonl_file, orient="records", lines=True)
 
         print(f"Master list: {master_file}")
         print(f"Diff CSV: {diff_csv_file}")
         print(f"Diff XLSX: {diff_xlsx_file}")
+        print(f"JSONL export: {jsonl_file}")
         print(f"Counts: {counts}")
         print(f"Log updated: {self.log_file}")
+        print(f"📁 All files exported to: {self.export_dir}")
 
     def run(self):
         master_df = self.fetch_master_lists()
