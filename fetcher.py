@@ -177,6 +177,59 @@ class StockTickerFetcher:
         master_df = self.fetch_master_lists()
         updated_master, diff_df, counts = self.detect_changes(master_df)
         self.save_master_and_diff(updated_master, diff_df, counts)
+    
+    def run_full_update(self, tickers=None, dry_run=False, max_tickers=None, delay=0):
+        """
+        Run complete update process for stock ticker data
+        
+        Args:
+            tickers: List of specific tickers to fetch (ignored for ticker fetcher)
+            dry_run: If True, don't save changes, just analyze
+            max_tickers: Maximum number of tickers to process (ignored for ticker fetcher)
+            delay: Delay between requests in seconds (ignored for ticker fetcher)
+        
+        Returns:
+            Dict with process statistics
+        """
+        try:
+            print("Starting stock ticker data update process")
+            
+            # Fetch master lists from exchanges
+            master_df = self.fetch_master_lists()
+            
+            # Detect changes from previous version
+            updated_master, diff_df, counts = self.detect_changes(master_df)
+            
+            if not dry_run:
+                # Save master file and differences
+                self.save_master_and_diff(updated_master, diff_df, counts)
+                print("Stock ticker data update process complete")
+            else:
+                print("DRY RUN: Stock ticker data analysis complete")
+            
+            return {
+                'success': True,
+                'dry_run': dry_run,
+                'timestamp': datetime.datetime.now().isoformat(),
+                'source': 'stock_ticker_fetcher',
+                'total_tickers': len(updated_master),
+                'new_tickers': counts.get('New', 0),
+                'delisted_tickers': counts.get('Delisted', 0),
+                'renamed_tickers': counts.get('Renamed', 0),
+                'exchange_changed': counts.get('Exchange Changed', 0),
+                'total_changes': len(diff_df),
+                'processed_exchanges': ['NASDAQ', 'NYSE', 'AMEX'],
+                'export_directory': self.export_dir
+            }
+            
+        except Exception as e:
+            print(f"Error in stock ticker update process: {str(e)}")
+            return {
+                'success': False,
+                'error': str(e),
+                'timestamp': datetime.datetime.now().isoformat(),
+                'source': 'stock_ticker_fetcher'
+            }
 
 if __name__ == "__main__":
     fetcher = StockTickerFetcher()
